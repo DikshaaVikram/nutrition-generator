@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition Script Generator</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --success-hover: #059669;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 40px 20px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 26px;
+            color: var(--primary);
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        @media (min-width: 768px) {
+            .workspace {
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+        }
+
+        textarea {
+            width: 100%;
+            height: 320px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+            resize: none;
+            background: #f1f5f9;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #ffffff;
+        }
+
+        .results-table-wrapper {
+            height: 320px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: #ffffff;
+        }
+
+        .results-table th, .results-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            box-shadow: 0 1px 0 var(--border);
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+        }
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .badge-found {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-missing {
+            background-color: #f1f5f9;
+            color: #64748b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .output-box {
+            margin-top: 20px;
+            border-top: 2px dashed var(--border);
+            padding-top: 25px;
+            display: none;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .copy-btn {
+            background: var(--success);
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+
+        .copy-btn:hover {
+            background: var(--success-hover);
+        }
+
+        .instruction-tag {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Nutrition Script Generator</h1>
+    </div>
+    
+    <div class="workspace">
+        <div class="panel">
+            <label for="rawInput">1. Unstructured Fussy Paste Input</label>
+            <textarea id="rawInput" placeholder="Paste label profile layout data or text strings here..."></textarea>
+        </div>
+
+        <div class="panel">
+            <label>2. Live Structural Extraction Table View</label>
+            <div class="results-table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Target Attribute</th>
+                            <th>Extracted Value</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button onclick="processAndGenerate()">Extract Data & Build Console Script</button>
+        <button class="btn-secondary" onclick="clearWorkspace()">Clear Workspace</button>
+    </div>
+
+    <div class="output-box" id="outputContainer">
+        <div class="output-header">
+            <label>3. Target Executable Browser Commands</label>
+            <button class="copy-btn" id="copyBtn" onclick="copyScriptToClipboard()">Copy Script Block</button>
+        </div>
+        <pre><code id="scriptOutput"></code></pre>
+        <div class="instruction-tag">Tip: Paste this script block inside your admin console window and hit Return.</div>
+    </div>
+</div>
+
+<script>
+const multiLevelLibrary = {
+    "calories": [/calories\s*[:=\s]*([<\d.]+)/, /cal\s*[:=\s]*([<\d.]+)/],
+    "fat": [/total fat\s*[:=\s]*([<\d.]+)/, /fat\s*[:=\s]*([<\d.]+)/],
+    "protein": [/protein\s*[:=\s]*([<\d.]+)/, /prot\s*[:=\s]*([<\d.]+)/],
+    "carb": [/total carbohydrate\s*[:=\s]*([<\d.]+)/, /carbohydrates\s*[:=\s]*([<\d.]+)/, /carb\s*[:=\s]*([<\d.]+)/],
+    "fibre": [/dietary fiber\s*[:=\s]*([<\d.]+)/, /fiber\s*[:=\s]*([<\d.]+)/, /fibre\s*[:=\s]*([<\d.]+)/],
+    "sodium": [/sodium\s*[:=\s]*([<\d.]+)/, /sod\s*[:=\s]*([<\d.]+)/],
+    "potassium": [/potassium\s*[:=\s]*([<\d.]+)/, /pot\s*[:=\s]*([<\d.]+)/],
+    "magnesium": [/magnesium\s*[:=\s]*([<\d.]+)/, /mag\s*[:=\s]*([<\d.]+)/],
+    "calcium": [/calcium\s*[:=\s]*([<\d.]+)/, /calc\s*[:=\s]*([<\d.]+)/],
+    "chromium": [/chromium\s*[:=\s]*([<\d.]+)/],
+    "omega3": [/omega 3\s*[:=\s]*([<\d.]+)/, /omega-3\s*[:=\s]*([<\d.]+)/],
+    "omega6": [/omega 6\s*[:=\s]*([<\d.]+)/, /omega-6\s*[:=\s]*([<\d.]+)/],
+    "alphaLipoicAcid": [/ala\s*[:=\s]*([<\d.]+)/, /alpha lipoic acid\s*[:=\s]*([<\d.]+)/],
+    "q10": [/q10\s*[:=\s]*([<\d.]+)/, /coenzyme q10\s*[:=\s]*([<\d.]+)/],
+    "biotin": [/biotin\s*[:=\s]*([<\d.]+)/],
+    "flavonoids": [/flavonoids\s*[:=\s]*([<\d.]+)/],
+    "choline": [/choline\s*[:=\s]*([<\d.]+)/],
+    "improveInsulinSensitivity": [/improve is\s*[:=\s]*([<\d.]+)/, /insulin sensitivity\s*[:=\s]*([<\d.]+)/],
+    "improveInsulinSecretion": [/improve insulin secretion\s*[:=\s]*([<\d.]+)/],
+    "improveBetaCellRegeneration": [/improve beta cell regeneration\s*[:=\s]*([<\d.]+)/],
+    "inhibitGluconeogenis": [/inhibit gluconeogenis\s*[:=\s]*([<\d.]+)/],
+    "inhibitCarbAbsorption": [/inhibit carb absorption\s*[:=\s]*([<\d.]+)/],
+    "inhibitHunger": [/inhibit hunger\s*[:=\s]*([<\d.]+)/],
+    "inhibitGlucoseKidneyReabsorption": [/inhibit glucose kidney reabsorption\s*[:=\s]*([<\d.]+)/],
+    "lactococcus": [/lactococcus\s*[:=\s]*([<\d.]+)/],
+    "lactobacillus": [/lactobacillus\s*[:=\s]*([<\d.]+)/],
+    "leuconostoc": [/leuconostoc\s*[:=\s]*([<\d.]+)/],
+    "streptococcus": [/streptococcus\s*[:=\s]*([<\d.]+)/],
+    "bifidobacterium": [/bifidobacterium\s*[:=\s]*([<\d.]+)/],
+    "saccharomyces": [/saccharomyces\s*[:=\s]*([<\d.]+)/],
+    "bacillus": [/bacillus\s*[:=\s]*([<\d.]+)/],
+    "otherBiota": [/other biota\s*[:=\s]*([<\d.]+)/, /other\s*[:=\s]*([<\d.]+)/],
+    "sugars": [/total sugars\s*[:=\s]*([<\d.]+)/, /sugars\s*[:=\s]*([<\d.]+)/],
+    "addedSugars": [/includes\s*([<\d.]+)\s*g\s*added sugars/, /added sugars\s*[:=\s]*([<\d.]+)/],
+    "fructose": [/fructose\s*[:=\s]*([<\d.]+)/],
+    "lactose": [/lactose\s*[:=\s]*([<\d.]+)/],
+    "galactose": [/galactose\s*[:=\s]*([<\d.]+)/],
+    "glucoseDextrose": [/glucose dextrose\s*[:=\s]*([<\d.]+)/],
+    "maltose": [/maltose\s*[:=\s]*([<\d.]+)/],
+    "starch": [/starch\s*[:=\s]*([<\d.]+)/],
+    "sucrose": [/sucrose\s*[:=\s]*([<\d.]+)/],
+    "sugarAlcohol": [/sugar alcohol\s*[:=\s]*([<\d.]+)/],
+    "allulose": [/allulose\s*[:=\s]*([<\d.]+)/],
+    "erythritol": [/erythritol\s*[:=\s]*([<\d.]+)/],
+    "glycemicIndex": [/glycemic index\s*[:=\s]*([<\d.]+)/],
+    "saturatedFat": [/saturated fat\s*[:=\s]*([<\d.]+)/],
+    "monounsaturatedFat": [/monounsaturated fat\s*[:=\s]*([<\d.]+)/],
+    "polyunsaturatedFat": [/polyunsaturated fat\s*[:=\s]*([<\d.]+)/],
+    "transFat": [/trans fat\s*[:=\s]*([<\d.]+)/],
+    "cholesterol": [/cholesterol\s*[:=\s]*([<\d.]+)/],
+    "histidine": [/histidine\s*[:=\s]*([<\d.]+)/],
+    "isolecuine": [/isolecuine\s*[:=\s]*([<\d.]+)/],
+    "lysine": [/lysine\s*[:=\s]*([<\d.]+)/],
+    "methionineAndCysteine": [/methionine \+ cysteine\s*[:=\s]*([<\d.]+)/],
+    "phenylananineAndTyrosine": [/phenylananine \+ tyrosine\s*[:=\s]*([<\d.]+)/],
+    "tryptophan": [/tryptophan\s*[:=\s]*([<\d.]+)/],
+    "threonine": [/threonine\s*[:=\s]*([<\d.]+)/],
+    "valine": [/valine\s*[:=\s]*([<\d.]+)/],
+    "leucine": [/leucine\s*[:=\s]*([<\d.]+)/],
+    "vitaminA": [/vitamin a\s*[:=\s]*([<\d.]+)/],
+    "vitaminC": [/vitamin c\s*[:=\s]*([<\d.]+)/],
+    "vitaminD": [/vitamin d\s*[:=\s]*([<\d.]+)/],
+    "vitaminE": [/vitamin e\s*[:=\s]*([<\d.]+)/],
+    "vitaminK": [/vitamin k\s*[:=\s]*([<\d.]+)/],
+    "vitaminB1": [/vitamin b1\s*[:=\s]*([<\d.]+)/],
+    "vitaminB2": [/vitamin b2\s*[:=\s]*([<\d.]+)/],
+    "vitaminB3": [/vitamin b3\s*[:=\s]*([<\d.]+)/],
+    "vitaminB5": [/vitamin b5\s*[:=\s]*([<\d.]+)/],
+    "vitaminB6": [/vitamin b6\s*[:=\s]*([<\d.]+)/],
+    "vitaminB12": [/vitamin b12\s*[:=\s]*([<\d.]+)/],
+    "folate": [/folate\s*[:=\s]*([<\d.]+)/],
+    "caroteneAlpha": [/carotene alpha\s*[:=\s]*([<\d.]+)/],
+    "caroteneBeta": [/carotene beta\s*[:=\s]*([<\d.]+)/],
+    "copper": [/copper\s*[:=\s]*([<\d.]+)/],
+    "iron": [/iron\s*[:=\s]*([<\d.]+)/],
+    "zinc": [/zinc\s*[:=\s]*([<\d.]+)/],
+    "manganese": [/manganese\s*[:=\s]*([<\d.]+)/],
+    "phosphorus": [/phosphorus\s*[:=\s]*([<\d.]+)/],
+    "selenium": [/selenium\s*[:=\s]*([<\d.]+)/],
+    "chloride": [/chloride\s*[:=\s]*([<\d.]+)/],
+    "iodide": [/iodide\s*[:=\s]*([<\d.]+)/],
+    "cobalt": [/cobalt\s*[:=\s]*([<\d.]+)/],
+    "molybdenum": [/molybdenum\s*[:=\s]*([<\d.]+)/],
+    "pralAlkalinity": [/pral alkalinity\s*[:=\s]*([<\d.]+)/],
+    "improveBloodPressure": [/improve blood pressure\s*[:=\s]*([<\d.]+)/],
+    "improveCholesterol": [/improve cholesterol\s*[:=\s]*([<\d.]+)/],
+    "improveRenalFunction": [/improve renal function\s*[:=\s]*([<\d.]+)/],
+    "improveLiverFunction": [/improve liver function\s*[:=\s]*([<\d.]+)/],
+    "improveThyroidFunction": [/improve thyroid function\s*[:=\s]*([<\d.]+)/],
+    "improveArthritis": [/improve arthritis\s*[:=\s]*([<\d.]+)/],
+    "reduceUricAcid": [/reduce uric acid\s*[:=\s]*([<\d.]+)/],
+    "reduceWeight": [/reduce weight\s*[:=\s]*([<\d.]+)/],
+    "inflammatoryIndex": [/inflammatory index\s*[:=\s]*([<\d.]+)/],
+    "oxidativeStressIndex": [/oxidative stress index\s*[:=\s]*([<\d.]+)/],
+    "gluten": [/gluten\s*[:=\s]*([<\d.]+)/],
+    "allergicIndex": [/allergic index\s*[:=\s]*([<\d.]+)/],
+    "water": [/water\s*[:=\s]*([<\d.]+)/],
+    "caffeine": [/caffeine\s*[:=\s]*([<\d.]+)/],
+    "alcoholEthyl": [/alcohol ethyl\s*[:=\s]*([<\d.]+)/]
+};
+
+function regexExtract(cleanText, matchExpressions) {
+    for (let pattern of matchExpressions) {
+        const checkMatch = cleanText.match(pattern);
+        if (checkMatch) {
+            let extractedStr = checkMatch[1].trim();
+            if (extractedStr.startsWith('<')) {
+                return { numericalVal: 0.9, verified: true };
+            }
+            let conversion = parseFloat(extractedStr);
+            return { numericalVal: isNaN(conversion) ? 0 : conversion, verified: true };
+        }
+    }
+    return { numericalVal: 0, verified: false };
+}
+
+function processAndGenerate() {
+    const userInput = document.getElementById('rawInput').value;
+    if (!userInput.trim()) return alert("Please paste data into the input box first.");
+
+    const normalizedString = userInput.replace(/\s+/g, ' ').toLowerCase();
+    const dynamicMatrixBody = document.getElementById('matrixBody');
+    dynamicMatrixBody.innerHTML = '';
+
+    const payloadContainer = {};
+
+    Object.keys(multiLevelLibrary).forEach(fieldTestKey => {
+        const parseProcessResult = regexExtract(normalizedString, multiLevelLibrary[fieldTestKey]);
+        payloadContainer[fieldTestKey] = parseProcessResult.numericalVal;
+
+        const row = document.createElement('tr');
+        const cellKey = document.createElement('td');
+        cellKey.style.fontWeight = "600";
+        cellKey.innerText = fieldTestKey;
+
+        const cellValue = document.createElement('td');
+        cellValue.innerText = parseProcessResult.numericalVal;
+        cellValue.style.fontFamily = "monospace";
+
+        const cellBadge = document.createElement('td');
+        const badgeSpan = document.createElement('span');
+        if (parseProcessResult.verified) {
+            badgeSpan.className = "badge-found";
+            badgeSpan.innerText = "Extracted";
+        } else {
+            badgeSpan.className = "badge-missing";
+            badgeSpan.innerText = "Omitted (0)";
+        }
+        
+        cellBadge.appendChild(badgeSpan);
+        row.appendChild(cellKey);
+        row.appendChild(cellValue);
+        row.appendChild(cellBadge);
+        dynamicMatrixBody.appendChild(row);
+    });
+
+    const executionScriptBlock = "(function() {\n" +
+        "    const data = " + JSON.stringify(payloadContainer, null, 4) + ";\n\n" +
+        "    Object.keys(data).forEach(key => {\n" +
+        "        if (data[key] === 0 || data[key] === \"0\" || data[key] === null || data[key] === undefined) {\n" +
+        "            return;\n" +
+        "        }\n\n" +
+        "        const field = document.querySelector('input[data-testid=\"' + key + '\"]') || document.querySelector('input[aria-label=\"' + key + '\"]');\n" +
+        "        if (field && !field.readOnly && !field.disabled) {\n" +
+        "            field.value = data[key];\n" +
+        "            field.dispatchEvent(new Event('input', { bubbles: true }));\n" +
+        "            field.dispatchEvent(new Event('change', { bubbles: true }));\n" +
+        "        }\n" +
+        "    });\n\n" +
+        "    console.log(\"Values successfully overwritten on your screen (skipping all zeros/blanks).\");\n" +
+        "})();";
+
+    document.getElementById('scriptOutput').innerText = executionScriptBlock;
+    document.getElementById('outputContainer').style.display = 'block';
+}
+
+function copyScriptToClipboard() {
+    const rawOutputCode = document.getElementById('scriptOutput').innerText;
+    navigator.clipboard.writeText(rawOutputCode).then(() => {
+        const actionBtn = document.getElementById('copyBtn');
+        actionBtn.innerText = 'Copied!';
+        setTimeout(() => { actionBtn.innerText = 'Copy Script Block'; }, 2000);
+    });
+}
+
+function clearWorkspace() {
+    document.getElementById('rawInput').value = '';
+    document.getElementById('outputContainer').style.display = 'none';
+    document.getElementById('matrixBody').innerHTML = '';
+}
+</script>
+
+</body>
+</html>
